@@ -1,42 +1,410 @@
 <!doctype html>
 <html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laboratorio MLOps</title>
-<style>body{font:18px/1.55 'Atkinson Hyperlegible',Segoe UI,sans-serif;color:#1b2430;max-width:780px;margin:40px auto;padding:0 20px}textarea{width:100%;font:15px/1.5 Consolas,monospace;padding:12px;min-height:180px;box-sizing:border-box}button{background:#1f6fd1;color:#fff;border:0;border-radius:4px;padding:10px 22px;cursor:pointer}pre{background:#eef1f4;padding:14px;white-space:pre-wrap;overflow-wrap:anywhere}small{color:#4f5b6b}h1{font-size:2rem}</style>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070b17">
+  <meta name="description" content="MLOps Students Lab: simulador interactivo de desempeño académico conectado a Databricks Model Serving.">
+  <title>Students / Intelligence Lab — MLOps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{color-scheme:dark;--bg:#070b17;--bg2:#0d1324;--panel:rgba(17,24,43,.88);--panel-high:rgba(21,29,51,.96);--line:rgba(163,184,228,.14);--muted:#9aa8c2;--text:#f4f7ff;--cyan:#58e9ee;--violet:#9975ff;--blue:#638eff;--green:#6cf0b7;--red:#ff8e9f;--mono:'DM Mono',ui-monospace,SFMono-Regular,Consolas,monospace;--display:'Space Grotesk',sans-serif;--body:'Manrope',system-ui,-apple-system,Segoe UI,sans-serif}
+    *,*::before,*::after{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--body);line-height:1.48;overflow-x:hidden}
+    ::selection{background:rgba(110,126,255,.4);color:#fff}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    button:disabled{cursor:wait;opacity:.7}
+    button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}
+    a{color:inherit}
+    .ambient{position:fixed;pointer-events:none;inset:0;z-index:-1;overflow:hidden;background:radial-gradient(circle at 9% 1%,rgba(82,82,170,.18),transparent 34%),radial-gradient(circle at 93% 12%,rgba(16,154,190,.13),transparent 30%),radial-gradient(circle at 67% 75%,rgba(79,53,150,.12),transparent 37%)}
+    .ambient::after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(128,163,211,.035) 1px, transparent 1px),linear-gradient(90deg,rgba(128,163,211,.035) 1px,transparent 1px);background-size:68px 68px;mask-image:linear-gradient(to bottom,#000,transparent 92%)}
+    .orb{position:absolute;border-radius:50%;filter:blur(1px);opacity:.75;animation:floatOrb 16s ease-in-out infinite alternate}
+    .orb.one{width:330px;height:330px;top:-175px;left:31%;background:radial-gradient(circle,rgba(89,92,229,.18),transparent 67%)}
+    .orb.two{width:430px;height:430px;top:28%;right:-260px;background:radial-gradient(circle,rgba(51,219,205,.11),transparent 70%);animation-duration:22s}
+    @keyframes floatOrb{to{transform:translate(45px,46px)}}
+    .wrap{width:min(1340px,calc(100% - 76px));margin-inline:auto}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:23px 0;border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:13px;text-decoration:none}
+    .brand-mark{width:44px;height:44px;border:1px solid rgba(100,232,255,.34);border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(80,225,241,.22),rgba(147,101,253,.14));box-shadow:inset 0 1px rgba(255,255,255,.12),0 6px 28px rgba(41,152,191,.1)}
+    .brand-mark svg{width:24px;height:24px;color:#b4f9ff}
+    .brand-name{font:700 20px/1 var(--display);letter-spacing:-.045em}
+    .brand-name em{font-style:normal;color:var(--cyan)}
+    .brand-sub{font:500 9px/1.5 var(--mono);letter-spacing:.20em;color:#8e9bb8;margin-top:5px}
+    .top-right{display:flex;align-items:center;gap:16px}
+    .top-label{font:500 11px var(--mono);color:#7c8ba7;letter-spacing:.1em}
+    .api-state{display:flex;align-items:center;gap:9px;padding:10px 14px;border:1px solid var(--line);border-radius:999px;background:rgba(22,31,52,.66);font:500 11px var(--mono);color:#c1c9dc;white-space:nowrap}
+    .api-state i{width:8px;height:8px;border-radius:50%;background:#e1c17f;box-shadow:0 0 0 4px rgba(225,193,127,.1)}
+    .api-state.ok i{background:var(--green);box-shadow:0 0 0 4px rgba(108,240,183,.1)}
+    .api-state.bad i{background:var(--red);box-shadow:0 0 0 4px rgba(255,142,159,.1)}
+    .hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px;align-items:end;padding:57px 0 39px}
+    .eyebrow{font:500 11px var(--mono);letter-spacing:.14em;color:var(--cyan);display:inline-flex;align-items:center;gap:11px;text-transform:uppercase}
+    .eyebrow::before{content:"";display:inline-block;width:24px;height:1px;background:currentColor}
+    .hero h1{font:700 clamp(43px,5vw,73px)/1.05 var(--display);letter-spacing:-.065em;max-width:820px;margin:16px 0 16px}
+    .hero h1 span{background:linear-gradient(100deg,#acb7ff 2%,#83f3ed 59%,#a8efbf 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .hero p{color:#a7b4cb;max-width:670px;font-size:15px;margin:0;line-height:1.7}
+    .edition{display:flex;gap:12px;align-items:center;font:500 11px var(--mono);color:#8794b0;white-space:nowrap;margin-bottom:5px}
+    .edition b{font:700 25px var(--display);letter-spacing:-.05em;color:#dfe8ff}
+    .dash{height:1px;flex:1;background:var(--line);min-width:26px}
+    .layout{display:grid;grid-template-columns:minmax(0,1.13fr) minmax(355px,.87fr);gap:22px;align-items:start;padding-bottom:48px}
+    .panel{position:relative;border:1px solid var(--line);border-radius:24px;background:var(--panel);box-shadow:0 18px 80px rgba(0,0,0,.17);overflow:hidden;backdrop-filter:blur(24px)}
+    .panel::before{content:"";pointer-events:none;position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(152,178,243,.45),transparent)}
+    .panel-pad{padding:29px}
+    .panel-title{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:12px}
+    .panel-kicker{font:500 10px var(--mono);color:var(--cyan);letter-spacing:.16em}
+    .tiny-index{font:500 11px var(--mono);color:#8190ae}
+    h2{font:600 29px/1.15 var(--display);letter-spacing:-.045em;margin:12px 0 7px}
+    .section-sub{color:var(--muted);font-size:13px;margin:0 0 21px;line-height:1.65}
+    .preset-row{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:0 0 22px}
+    .preset-label{font:500 10px var(--mono);color:#8796b5;margin-right:4px}
+    .preset{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(144,167,205,.2);background:rgba(20,29,52,.82);border-radius:999px;padding:9px 12px;color:#d8e1f4;font:500 11px var(--mono);transition:transform .2s,border-color .2s,background .2s}
+    .preset:hover{transform:translateY(-2px);border-color:rgba(88,233,238,.5);background:rgba(27,48,70,.88)}
+    .preset svg{height:14px;width:14px;color:var(--cyan)}
+    .group-title{display:flex;align-items:center;gap:11px;margin:29px 0 14px;font:700 12px var(--body);color:#e6ecfc;letter-spacing:.015em}
+    .group-title .number{font:500 11px var(--mono);border:1px solid rgba(88,233,238,.24);background:rgba(88,233,238,.07);color:var(--cyan);border-radius:8px;padding:6px 7px}
+    .group-title::after{content:"";height:1px;flex:1;background:var(--line)}
+    .field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+    .field{border:1px solid rgba(151,172,212,.13);border-radius:15px;background:rgba(13,21,40,.78);padding:17px 17px 15px;transition:border-color .2s,box-shadow .2s,transform .2s;min-width:0}
+    .field:focus-within{border-color:rgba(94,226,235,.52);box-shadow:0 0 0 3px rgba(94,226,235,.055)}
+    .field.full{grid-column:1 / -1}
+    .field-top{display:flex;justify-content:space-between;gap:6px;align-items:center}
+    .field-label{display:block;font-size:12px;color:#e9eefd;font-weight:700}
+    .field-meta{font:500 9px var(--mono);color:#7789ab;text-transform:uppercase}
+    .field-help{display:block;margin-top:5px;font-size:10.5px;color:#8596b4;line-height:1.5;min-height:28px}
+    .num-wrap{display:flex;align-items:baseline;gap:7px;margin-top:8px}
+    .num-wrap input{width:100%;min-width:0;border:0;background:transparent;color:#fff;outline:0;font:600 clamp(22px,2.2vw,29px)/1.2 var(--display);letter-spacing:-.04em;padding:1px 0}
+    .num-wrap input:focus-visible{outline:0}
+    input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{opacity:.25}
+    .unit{color:#7990b3;font:500 10px var(--mono);white-space:nowrap}
+    .slider-row{display:flex;align-items:center;gap:14px}
+    .slider-row input[type=range]{flex:1;min-width:0;accent-color:#75e9ea;cursor:pointer;height:6px;appearance:none;background:linear-gradient(90deg,rgba(88,233,238,.85) 57%,rgba(150,168,203,.18) 57%);border-radius:999px}
+    .slider-row input[type=range]::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#d9fffb;border:3px solid #53bed1;box-shadow:0 0 12px rgba(88,233,238,.4)}
+    .slider-row input[type=number]{border:1px solid rgba(156,176,211,.22);border-radius:9px;padding:8px;background:rgba(11,20,37,.8);width:81px;font:600 15px var(--display);color:#fff;text-align:right;outline:none}
+    .binary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+    fieldset.binary-field{margin:0;min-width:0;border:1px solid rgba(151,172,212,.13);border-radius:15px;padding:15px 16px 16px;background:rgba(13,21,40,.78)}
+    .binary-field legend{float:left;display:block;width:100%;padding:0;font-size:12px;color:#e9eefd;font-weight:700;margin:0 0 4px}
+    .binary-field .desc{display:block;font-size:10.5px;color:#8294b2;line-height:1.5;min-height:33px;clear:both}
+    .toggle{margin-top:12px;padding:4px;display:grid;grid-template-columns:1fr 1fr;gap:3px;background:#080e1c;border-radius:10px;border:1px solid rgba(163,184,228,.11)}
+    .toggle label{position:relative;cursor:pointer;display:block}
+    .toggle input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+    .toggle span{display:block;border-radius:7px;text-align:center;padding:10px 5px;color:#8b9bb9;font:700 11px var(--body);transition:.18s}
+    .toggle input:checked+span{background:linear-gradient(145deg,#273858,#1d2d49);color:#eafcfc;box-shadow:0 1px 10px rgba(0,0,0,.22)}
+    .toggle input:focus-visible+span{outline:2px solid var(--cyan);outline-offset:2px}
+    .footnote{margin:11px 0 0;font-size:10.5px;color:#8b9bb9;line-height:1.65}
+    .actionbar{margin-top:23px;display:flex;gap:10px;flex-wrap:wrap}
+    .submit{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-height:54px;border:0;border-radius:13px;color:#07111b;font:800 13px var(--body);background:linear-gradient(104deg,#90fbdb 0%,#74eef3 46%,#9bafff 100%);box-shadow:0 8px 28px rgba(69,199,221,.18);transition:transform .2s,filter .2s,box-shadow .2s}
+    .submit:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.07);box-shadow:0 12px 30px rgba(69,199,221,.24)}
+    .submit svg{width:17px;height:17px}
+    .secondary-button{display:flex;align-items:center;justify-content:center;gap:9px;border:1px solid rgba(143,171,219,.25);background:rgba(15,24,43,.6);border-radius:13px;color:#e0eaff;padding:12px 17px;font:700 12px var(--body)}
+    .secondary-button:hover{border-color:rgba(113,233,239,.5)}
+    .secondary-button svg{width:17px;height:17px}
+    .inline-error{color:#ffb1bd;font-size:12px;margin-top:12px;min-height:0}
+    .tech-details{margin-top:22px;border-top:1px solid var(--line);padding-top:17px}
+    details summary{list-style:none;display:flex;align-items:center;gap:10px;cursor:pointer;color:#b3c5e0;font:500 11px var(--mono);letter-spacing:.02em}
+    details summary::-webkit-details-marker{display:none}
+    details summary::before{content:'+';font:500 19px var(--display);color:var(--cyan)}
+    details[open] summary::before{content:'−'}
+    .jsonbox{overflow:auto;background:#060c1a;border:1px solid rgba(150,181,221,.13);border-radius:13px;color:#a8eadb;padding:15px;margin:12px 0 0;font:11px/1.8 var(--mono);white-space:pre-wrap;word-break:break-word;max-height:270px}
+    .tiny-actions{display:flex;justify-content:flex-end;margin-top:8px}
+    .text-button{background:transparent;border:0;color:#8de7f1;font:500 11px var(--mono);padding:6px 0}
+    .result-panel{position:sticky;top:18px}
+    .result-header{display:flex;justify-content:space-between;align-items:center;padding:24px 27px 0}
+    .result-stage{position:relative;min-height:400px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:21px 32px 31px}
+    .result-stage::before{content:"";position:absolute;width:320px;height:320px;left:50%;top:43%;transform:translate(-50%,-50%);border:1px solid rgba(150,174,234,.07);border-radius:50%;pointer-events:none}
+    .result-stage::after{content:"";position:absolute;width:385px;height:385px;left:50%;top:43%;transform:translate(-50%,-50%);border:1px dashed rgba(150,174,234,.07);border-radius:50%;pointer-events:none}
+    .radar{width:202px;height:202px;position:relative;display:grid;place-items:center;margin:13px 0 21px;isolation:isolate}
+    .radar .ring{position:absolute;border-radius:50%;inset:3px;border:1px solid rgba(95,224,232,.23)}
+    .radar .ring:nth-child(2){inset:20px;border:1px dashed rgba(120,149,236,.25);animation:spin 28s linear infinite}
+    .radar .ring:nth-child(3){inset:39px;border:1px solid rgba(127,167,236,.15)}
+    .radar::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 210deg,transparent 0%,rgba(76,238,235,.27) 12%,transparent 21%,rgba(146,109,255,.22) 49%,transparent 62%,rgba(76,238,235,.16) 79%,transparent 100%);filter:blur(18px);opacity:.72}
+    .core{position:relative;z-index:1;width:112px;height:112px;display:grid;place-items:center;border-radius:30px;transform:rotate(-7deg);background:linear-gradient(145deg,#1b2a4e,#101b35);border:1px solid rgba(143,201,244,.22);box-shadow:inset 0 1px rgba(255,255,255,.1),0 16px 45px rgba(0,0,0,.28);transition:transform .6s,background .5s}
+    .core svg{width:56px;height:56px;color:#83d8f2;transform:rotate(7deg)}
+    .result-stage .status-kicker{position:relative;z-index:1;font:500 10px var(--mono);letter-spacing:.17em;color:#8298bb;text-transform:uppercase}
+    .result-heading{position:relative;z-index:1;font:700 clamp(35px,3.7vw,52px)/1.06 var(--display);letter-spacing:-.07em;margin:10px 0;max-width:100%}
+    .result-desc{position:relative;z-index:1;font-size:13px;line-height:1.7;color:#9eafc9;max-width:335px;margin:0 auto}
+    .status-accent{position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px;font:500 10px var(--mono);color:#8e9fbc;margin-top:25px;padding:8px 12px;border:1px solid rgba(147,169,207,.18);border-radius:999px;background:rgba(13,21,39,.66)}
+    .status-accent i{width:6px;height:6px;background:var(--cyan);border-radius:50%}
+    .result-stage.approved .core{background:linear-gradient(145deg,#153d40,#153344);border-color:rgba(108,240,183,.55);box-shadow:0 0 80px rgba(51,226,167,.12)}
+    .result-stage.approved .core svg{color:var(--green)}
+    .result-stage.approved .ring{border-color:rgba(108,240,183,.34)}
+    .result-stage.approved .result-heading{color:var(--green);text-shadow:0 0 45px rgba(53,228,170,.22)}
+    .result-stage.failed .core{background:linear-gradient(145deg,#412139,#222443);border-color:rgba(255,142,159,.5)}
+    .result-stage.failed .core svg{color:var(--red)}
+    .result-stage.failed .ring{border-color:rgba(255,142,159,.25)}
+    .result-stage.failed .result-heading{color:var(--red);text-shadow:0 0 45px rgba(255,142,159,.19)}
+    .result-stage.loading .radar{animation:breath 1.15s ease-in-out infinite alternate}
+    .result-stage.loading .core svg{animation:spin 2.6s linear infinite}
+    .result-stage.approved,.result-stage.failed{animation:resultIn .55s cubic-bezier(.22,1,.36,1) both}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes breath{to{transform:scale(1.07);filter:brightness(1.22)}}
+    @keyframes resultIn{from{opacity:.56;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+    .result-footer{padding:20px 26px 23px;background:rgba(11,18,35,.64);border-top:1px solid var(--line)}
+    .result-metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .metric{padding:11px 12px;border:1px solid rgba(143,173,217,.12);border-radius:12px;background:rgba(19,28,48,.52)}
+    .metric-label{display:block;font:500 10px var(--mono);color:#8392ae;margin-bottom:4px}
+    .metric-value{font:700 15px var(--display);color:#e4eefe}
+    .session-history{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+    .history-header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .history-header h3{font:700 12px var(--body);margin:0}
+    .history-header span{font:500 10px var(--mono);color:#8494b3}
+    .history-empty{margin:12px 0 0;color:#7e8da7;font-size:11px;line-height:1.6}
+    .history-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:7px}
+    .history-list li{display:flex;gap:12px;align-items:center;justify-content:space-between;font-size:11px;padding:10px 12px;border:1px solid rgba(143,173,217,.12);background:rgba(19,29,50,.46);border-radius:10px}
+    .history-list strong{font-size:11px}
+    .history-list strong.approved{color:var(--green)}
+    .history-list strong.failed{color:var(--red)}
+    .history-list time{color:#8295b8;font:10px var(--mono)}
+    .history-list button{padding:4px 7px;background:transparent;border:1px solid rgba(131,175,209,.22);border-radius:7px;color:#a2e6ea;font:10px var(--mono)}
+    .foot{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:25px 0 36px;border-top:1px solid var(--line);color:#7f8da8;font-size:10.5px}
+    .foot .mono{font:10px var(--mono);letter-spacing:.04em}
+    .confetti{position:fixed;inset:0;pointer-events:none;z-index:30;overflow:hidden}
+    .confetti-piece{position:absolute;left:var(--x);top:-30px;width:var(--w);height:var(--h);background:var(--c);opacity:.95;transform:rotate(var(--r));animation:confettiFall var(--dur) cubic-bezier(.19,.52,.42,1) forwards;animation-delay:var(--delay)}
+    @keyframes confettiFall{to{transform:translate(var(--dx),110vh) rotate(770deg);opacity:0}}
+    .toast{position:fixed;right:24px;bottom:24px;z-index:40;padding:12px 17px;border:1px solid rgba(126,227,230,.26);border-radius:12px;background:#182944;box-shadow:0 14px 35px #0005;color:#dff7f5;font-size:12px;transform:translateY(120px);opacity:0;transition:transform .3s,opacity .3s;pointer-events:none}
+    .toast.show{transform:none;opacity:1}
+    .offline-note{display:none;font-size:12px;line-height:1.55;padding:12px 15px;margin-top:12px;color:#f5ddaa;background:#332718;border:1px solid rgba(240,196,117,.25);border-radius:11px}
+    .offline-note.show{display:block}
+    @media(max-width:1050px){.wrap{width:min(940px,calc(100% - 42px))}.layout{grid-template-columns:1fr}.result-panel{position:static}.result-stage{min-height:370px}.result-stage::after{display:none}.hero{padding-top:42px}}
+    @media(max-width:630px){.wrap{width:calc(100% - 30px)}.topbar{padding:17px 0;gap:7px}.brand{gap:9px;min-width:0}.brand-mark{width:38px;height:38px;border-radius:12px;flex-shrink:0}.brand-name{font-size:17px}.brand-sub{display:block;font-size:7px;letter-spacing:.12em;white-space:nowrap}.top-label,.edition{display:none}.api-state{font-size:9px;padding:8px 9px}.hero{display:block;padding:39px 0 28px}.hero h1{font-size:clamp(40px,10.4vw,63px);margin-top:15px}.hero p{font-size:13px}.panel{border-radius:19px}.panel-pad{padding:19px}.field-grid,.binary-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.field-help{min-height:unset}.actionbar{flex-direction:column}.result-header{padding:21px 21px 0}.result-stage{min-height:370px;padding:12px 24px 25px}.result-footer{padding:17px 18px 19px}.foot{display:block}.foot span{display:block;margin-bottom:7px}.preset-label{flex-basis:100%}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition:none!important}.confetti{display:none}}
+  </style>
 </head>
 <body>
-<h1>Prueba de integración con Databricks</h1>
-<p>Este formulario de laboratorio envía el JSON introducido a la API del servidor, que consulta el endpoint configurado en Databricks.</p>
-<p><strong>Adapta el JSON al esquema de entrada real de tu modelo.</strong> El contenido siguiente es un ejemplo ficticio.</p>
-<textarea id="datos" aria-label="JSON de entrada">{
-  "dataframe_split": {
-    "columns": [
-      "horas_estudio",
-      "horas_sueno",
-      "asistencia",
-      "promedio_previo",
-      "indice_dedicacion",
-      "en_riesgo",
-      "destacado"
-    ],
-    "data": [
-      [5.8, 9.0, 57.0, 0.41, 0.576, 0, 0]
-    ]
-  }
-}</textarea>
-<p><button id="enviar">Enviar a Databricks</button></p>
-<small>Esta página es un ejemplo técnico. No publiques datos personales ni conectes el servidor sin controlar acceso, costos y permisos.</small>
-<h2>Respuesta</h2><pre id="resultado">Sin enviar</pre>
+  <div class="ambient" aria-hidden="true"><div class="orb one"></div><div class="orb two"></div></div>
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="wrap">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Students Intelligence Lab, inicio">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3.3 6.3 12 10.6l8.7-4.3L12 2Z"/><path d="m3.3 11 8.7 4.3 8.7-4.3M3.3 15.8l8.7 4.3 8.7-4.3"/></svg></span>
+        <span><span class="brand-name">STUDENTS<span style="opacity:.5">/</span><em>LAB</em></span><span class="brand-sub">PREDICTIVE INTELLIGENCE</span></span>
+      </a>
+      <div class="top-right"><span class="top-label">MLOPS · MODEL SERVING</span><div class="api-state" id="api-state" aria-live="polite"><i></i><span id="api-label">Verificando API</span></div></div>
+    </header>
+
+    <section class="hero">
+      <div><div class="eyebrow">ACADEMIC PREDICTION ENGINE</div><h1>El futuro comienza<br><span>con tus datos.</span></h1><p>Explora cómo los hábitos de estudio y los indicadores académicos se relacionan con la predicción del modelo. Siete variables. Un resultado. Tecnología de machine learning conectada a Databricks.</p></div>
+      <div class="edition" aria-label="Versión 01"><span>EXPERIENCE</span><span class="dash"></span><b>01</b></div>
+    </section>
+
+    <main class="layout">
+      <section class="panel" aria-labelledby="form-heading">
+        <div class="panel-pad">
+          <div class="panel-title"><span class="panel-kicker">01 / CONFIGURACIÓN DEL ESCENARIO</span><span class="tiny-index">7 VARIABLES</span></div>
+          <h2 id="form-heading">Diseña tu escenario.</h2>
+          <p class="section-sub">Ajusta las variables y consulta el modelo. Los datos de ejemplo provienen de una solicitud real utilizada para probar el endpoint.</p>
+          <div class="preset-row"><span class="preset-label">CARGAR EJEMPLO</span>
+            <button class="preset" id="example-a" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h10v10H7zM12 2v5m0 10v5m5-10h5M2 12h5"/></svg>Registro 01</button>
+            <button class="preset" id="example-b" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h10v10H7zM12 2v5m0 10v5m5-10h5M2 12h5"/></svg>Registro 03</button>
+          </div>
+
+          <form id="predict-form" novalidate>
+            <div class="group-title"><span class="number">A</span> Hábitos y rendimiento</div>
+            <div class="field-grid">
+              <div class="field"><div class="field-top"><label class="field-label" for="horas_estudio">Horas de estudio</label><span class="field-meta">DOUBLE</span></div><small class="field-help" id="study-desc">Horas dedicadas al estudio en el periodo de referencia.</small><div class="num-wrap"><input id="horas_estudio" name="horas_estudio" type="number" inputmode="decimal" min="0" step="0.1" value="5.8" required aria-describedby="study-desc"><span class="unit">h</span></div></div>
+              <div class="field"><div class="field-top"><label class="field-label" for="horas_sueno">Horas de sueño</label><span class="field-meta">DOUBLE</span></div><small class="field-help" id="sleep-desc">Horas de descanso diarias del estudiante.</small><div class="num-wrap"><input id="horas_sueno" name="horas_sueno" type="number" inputmode="decimal" min="0" step="0.1" value="9.0" required aria-describedby="sleep-desc"><span class="unit">h/día</span></div></div>
+              <div class="field full"><div class="field-top"><label class="field-label" for="asistencia">Asistencia a clases</label><span class="field-meta">PORCENTAJE</span></div><small class="field-help" id="attend-desc">Porcentaje de asistencia, entre 0 y 100.</small><div class="slider-row" style="margin-top:14px"><input type="range" id="asistencia-range" min="0" max="100" step="0.1" value="57" aria-label="Asistencia, deslizador"><input id="asistencia" name="asistencia" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="57" required aria-describedby="attend-desc"><span class="unit">%</span></div></div>
+              <div class="field"><div class="field-top"><label class="field-label" for="promedio_previo">Promedio previo</label><span class="field-meta">DOUBLE</span></div><small class="field-help" id="grade-desc">Promedio académico obtenido en el ciclo anterior.</small><div class="num-wrap"><input id="promedio_previo" name="promedio_previo" type="number" inputmode="decimal" min="0" step="0.01" value="0.41" required aria-describedby="grade-desc"><span class="unit">nota</span></div></div>
+              <div class="field"><div class="field-top"><label class="field-label" for="indice_dedicacion">Índice de dedicación</label><span class="field-meta">DOUBLE</span></div><small class="field-help" id="dedic-desc">Indicador derivado del proceso de preparación de datos.</small><div class="num-wrap"><input id="indice_dedicacion" name="indice_dedicacion" type="number" inputmode="decimal" min="0" step="any" value="0.576" required aria-describedby="dedic-desc"><span class="unit">índice</span></div></div>
+            </div>
+
+            <div class="group-title"><span class="number">B</span> Indicadores derivados</div>
+            <div class="binary-grid">
+              <fieldset class="binary-field"><legend>¿Está en riesgo?</legend><small class="desc">Indicador derivado: riesgo de reprobar.</small><div class="toggle"><label><input type="radio" name="en_riesgo" value="0" checked><span>No · 0</span></label><label><input type="radio" name="en_riesgo" value="1"><span>Sí · 1</span></label></div></fieldset>
+              <fieldset class="binary-field"><legend>¿Es destacado?</legend><small class="desc">Indicador derivado: disciplina académica.</small><div class="toggle"><label><input type="radio" name="destacado" value="0" checked><span>No · 0</span></label><label><input type="radio" name="destacado" value="1"><span>Sí · 1</span></label></div></fieldset>
+            </div>
+            <p class="footnote">Los indicadores derivados se introducen manualmente: esta interfaz no recalcula sus fórmulas. Utiliza valores consistentes con el pipeline original.</p>
+            <div class="actionbar"><button class="submit" id="predict-btn" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg><span id="button-label">Generar predicción</span></button><button type="button" class="secondary-button" id="reset-btn" title="Restablecer el formulario al primer registro de ejemplo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11a9 9 0 1 1 2.6 6.4M3 4v7h7"/></svg>Restablecer</button></div>
+            <div class="inline-error" id="form-error" role="alert" aria-live="assertive"></div>
+            <div class="offline-note" id="offline-note">Estás visualizando el HTML directamente desde un archivo. Para obtener predicciones reales, abre la página desde tu Web App de Azure o desde FastAPI en <code>http://127.0.0.1:8000/</code>.</div>
+          </form>
+
+          <div class="tech-details"><details id="request-details"><summary>INSPECCIONAR SOLICITUD JSON · DATAFRAME_SPLIT</summary><pre class="jsonbox" id="request-preview"></pre><div class="tiny-actions"><button class="text-button" id="copy-json" type="button">Copiar JSON ↗</button></div></details></div>
+        </div>
+      </section>
+
+      <aside class="panel result-panel" aria-labelledby="result-panel-heading">
+        <div class="result-header"><span class="panel-kicker" id="result-panel-heading">02 / INTELIGENCIA EN ACCIÓN</span><span class="tiny-index">MODEL OUTPUT</span></div>
+        <div class="result-stage idle" id="result-stage" aria-live="polite" aria-atomic="true">
+          <div class="radar" aria-hidden="true"><span class="ring"></span><span class="ring"></span><span class="ring"></span><div class="core" id="result-icon"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 40 21 27l11 11 23-24"/><path d="M43 14h12v12"/><path d="M10 52h44"/></svg></div></div>
+          <span class="status-kicker" id="result-kicker">MODELO LISTO PARA CONSULTA</span>
+          <div class="result-heading" id="result-heading">Tu resultado<br>comienza aquí.</div>
+          <p class="result-desc" id="result-desc">Configura un escenario y descubre qué predice el modelo para este estudiante.</p>
+          <span class="status-accent" id="result-accent"><i></i><span id="result-accent-text">ESPERANDO DATOS</span></span>
+        </div>
+        <div class="result-footer">
+          <div class="result-metrics"><div class="metric"><span class="metric-label">SALIDA DEL MODELO</span><span class="metric-value" id="metric-output">Sin consulta</span></div><div class="metric"><span class="metric-label">TIEMPO DE RESPUESTA</span><span class="metric-value" id="metric-time">—</span></div></div>
+          <div class="session-history"><div class="history-header"><h3>Actividad de esta sesión</h3><span id="history-count">0 predicciones</span></div><p class="history-empty" id="history-empty">Las consultas realizadas aparecerán aquí. No se guardan de forma permanente.</p><ul class="history-list" id="history-list"></ul></div>
+          <details style="margin-top:20px" id="response-details"><summary>VER RESPUESTA TÉCNICA</summary><pre class="jsonbox" id="response-preview">Todavía no se ha consultado el modelo.</pre></details>
+        </div>
+      </aside>
+    </main>
+    <footer class="foot"><span>STUDENTS / LAB · Predicción académica con Databricks Model Serving</span><span class="mono">RESULTADO PREDICTIVO · NO EQUIVALE A UNA CALIFICACIÓN OFICIAL</span></footer>
+  </div>
 <script>
+'use strict';
+// El backend FastAPI existente recibe el JSON y realiza la autenticación con Databricks.
+// No incluir tokens ni credenciales en este archivo.
 const API_URL = '/predict';
-document.getElementById('enviar').addEventListener('click', async () => {
-  const out = document.getElementById('resultado');
-  out.textContent = 'Consultando...';
-  try {
-    const data = JSON.parse(document.getElementById('datos').value);
-    const r = await fetch(API_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-    const result = await r.json();
-    out.textContent = JSON.stringify({http_status:r.status, respuesta:result},null,2);
-  } catch (e) { out.textContent = 'Error: ' + e.message; }
+const columns = ['horas_estudio','horas_sueno','asistencia','promedio_previo','indice_dedicacion','en_riesgo','destacado'];
+// Extraídos de Request_ejemplo.json proporcionado por el proyecto.
+const samples = [
+  [5.8,9.0,57.0,0.41,0.576,0,0],
+  [3.3,6.9,78.5,3.69,0.512,0,0],
+  [0.6,6.6,60.3,4.09,0.2772,1,0],
+  [6.6,8.5,95.4,2.34,0.7776000000000001,0,0],
+  [2.3,8.5,69.9,0.09,0.41759999999999997,0,0]
+];
+const $ = id => document.getElementById(id);
+const form = $('predict-form');
+const stage = $('result-stage');
+const apiState = $('api-state');
+const history = [];
+let busy = false;
+let toastTimeout;
+const icons = {
+  idle:'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 40 21 27l11 11 23-24"/><path d="M43 14h12v12"/><path d="M10 52h44"/></svg>',
+  approved:'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"><path d="m14 32 12 12 24-25"/></svg>',
+  failed:'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.1" stroke-linecap="round"><path d="M19 19 45 45M45 19 19 45"/></svg>',
+  loading:'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M32 8a24 24 0 1 1-24 24"/><path d="m10 16-2 16 15-3"/></svg>'
+};
+function announce(msg){
+  const toast = $('toast');toast.textContent=msg;toast.classList.add('show');
+  clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>toast.classList.remove('show'),3100);
+}
+function setApi(isOk,label){apiState.classList.toggle('ok',isOk===true);apiState.classList.toggle('bad',isOk===false);$('api-label').textContent=label;}
+async function checkApi(){
+  if(location.protocol==='file:') {setApi(false,'Vista local');$('offline-note').classList.add('show');return;}
+  try{const response=await fetch('/health',{method:'GET',cache:'no-store',signal:AbortSignal.timeout(6000)});const obj=await response.json();setApi(response.ok&&obj.status==='ok',response.ok&&obj.status==='ok'?'API operativa':'API sin respuesta');}
+  catch(_){setApi(false,'API sin verificar');}
+}
+function selectedBinary(name){const checked=form.querySelector('input[name="'+name+'"]:checked');return checked?Number(checked.value):NaN;}
+function readRecord(){
+  const result=columns.map(key=>key==='en_riesgo'||key==='destacado'?selectedBinary(key):Number($(key).value));
+  for(let i=0;i<5;i++){if($(columns[i]).value.trim()===''||!Number.isFinite(result[i]))throw Error('Ingresa un número válido en «'+$(columns[i]).closest('.field').querySelector('label').textContent+'».');}
+  if(result[0]<0||result[1]<0||result[3]<0||result[4]<0)throw Error('Las horas y los indicadores numéricos no pueden ser negativos.');
+  if(result[2]<0||result[2]>100)throw Error('La asistencia debe estar entre 0 y 100 %.');
+  if(![0,1].includes(result[5])||![0,1].includes(result[6]))throw Error('Los indicadores en_riesgo y destacado deben valer 0 o 1.');
+  return result;
+}
+function makePayload(record){return {dataframe_split:{columns:[...columns],data:[record]}};}
+function updatePreview(){
+  try{$('request-preview').textContent=JSON.stringify(makePayload(readRecord()),null,2);$('form-error').textContent='';}
+  catch(err){$('request-preview').textContent='Completa los campos para generar un JSON válido.';}
+}
+function updateSlider(){const slider=$('asistencia-range'),num=$('asistencia');if(num.value.trim()!==''&&Number.isFinite(Number(num.value))){const n=Math.min(100,Math.max(0,Number(num.value)));slider.value=String(n);slider.style.background=`linear-gradient(90deg,rgba(88,233,238,.85) ${n}%,rgba(150,168,203,.18) ${n}%)`;}}
+$('asistencia-range').addEventListener('input',ev=>{$('asistencia').value=ev.target.value;updateSlider();updatePreview();});
+form.addEventListener('input',()=>{updateSlider();updatePreview();resetResult();});
+form.addEventListener('change',updatePreview);
+function setRecord(values){
+  for(let i=0;i<5;i++)$(columns[i]).value=values[i];
+  for(let i=5;i<7;i++){
+    const input=form.querySelector('input[name="'+columns[i]+'"][value="'+values[i]+'"]');
+    if(input)input.checked=true;
+  }
+  updateSlider();updatePreview();$('form-error').textContent='';resetResult();
+}
+$('example-a').addEventListener('click',()=>{if(busy)return;setRecord(samples[0]);announce('Registro 01 cargado');});
+$('example-b').addEventListener('click',()=>{if(busy)return;setRecord(samples[2]);announce('Registro 03 cargado');});
+$('reset-btn').addEventListener('click',()=>{if(busy)return;setRecord(samples[0]);resetResult();announce('Formulario restablecido');});
+$('copy-json').addEventListener('click',async()=>{
+  try{const v=JSON.stringify(makePayload(readRecord()),null,2);if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(v);announce('JSON copiado');}else{announce('Selecciona el texto del JSON para copiarlo');}}
+  catch(err){$('form-error').textContent=err.message;}
 });
+function resetResult(){
+  stage.className='result-stage idle';$('result-icon').innerHTML=icons.idle;
+  $('result-kicker').textContent='MODELO LISTO PARA CONSULTA';$('result-heading').innerHTML='Tu resultado<br>comienza aquí.';
+  $('result-desc').textContent='Configura un escenario y descubre qué predice el modelo para este estudiante.';
+  $('result-accent-text').textContent='ESPERANDO DATOS';$('metric-output').textContent='Sin consulta';$('metric-time').textContent='—';
+  $('response-preview').textContent='Todavía no se ha consultado el modelo.';
+}
+function startLoading(){
+  stage.className='result-stage loading';$('result-icon').innerHTML=icons.loading;
+  $('result-kicker').textContent='EJECUTANDO CONSULTA';$('result-heading').textContent='Analizando datos…';
+  $('result-desc').textContent='Enviando las variables al modelo alojado en Databricks.';
+  $('result-accent-text').textContent='SOLICITUD EN PROCESO';$('metric-output').textContent='Procesando';$('metric-time').textContent='—';
+  $('button-label').textContent='Consultando el modelo…';$('predict-btn').disabled=true;
+  $('reset-btn').disabled=true;$('example-a').disabled=true;$('example-b').disabled=true;
+}
+function finishLoading(){busy=false;$('button-label').textContent='Generar predicción';$('predict-btn').disabled=false;$('reset-btn').disabled=false;$('example-a').disabled=false;$('example-b').disabled=false;}
+function showError(message,ms){
+  stage.className='result-stage failed';$('result-icon').innerHTML=icons.failed;
+  $('result-kicker').textContent='NO SE PUDO COMPLETAR';$('result-heading').textContent='Consulta fallida';
+  $('result-desc').textContent=message;$('result-accent-text').textContent='REVISAR CONEXIÓN';
+  $('metric-output').textContent='Error';$('metric-time').textContent=ms!=null?ms+' ms':'—';
+}
+function showResult(value,elapsed,raw){
+  const passed=value===1;
+  stage.className='result-stage '+(passed?'approved':'failed');
+  $('result-icon').innerHTML=icons[passed?'approved':'failed'];
+  $('result-kicker').textContent='PREDICCIÓN COMPLETADA';
+  $('result-heading').textContent=passed?'¡APRUEBA!':'REPRUEBA';
+  $('result-desc').textContent=passed?'El modelo predice que el estudiante aprobará con las variables introducidas.':'El modelo predice que el estudiante reprobará con las variables introducidas.';
+  $('result-accent-text').textContent=passed?'CLASE 1 · APRUEBA':'CLASE 0 · REPRUEBA';
+  $('metric-output').textContent='Clase '+value;$('metric-time').textContent=elapsed+' ms';
+  $('response-preview').textContent=JSON.stringify(raw,null,2);
+  if(passed)celebrate();
+}
+function celebrate(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const layer=$('confetti');layer.replaceChildren();
+  const colors=['#6cf0b7','#58e9ee','#9987ff','#ffd88d','#edfaff'];
+  for(let i=0;i<58;i++){
+    const p=document.createElement('span');p.className='confetti-piece';
+    p.style.setProperty('--x',(Math.random()*100).toFixed(1)+'%');
+    p.style.setProperty('--w',Math.floor(5+Math.random()*5)+'px');
+    p.style.setProperty('--h',Math.floor(7+Math.random()*9)+'px');
+    p.style.setProperty('--c',colors[i%colors.length]);
+    p.style.setProperty('--r',Math.floor(Math.random()*360)+'deg');
+    p.style.setProperty('--dx',Math.round((Math.random()-.5)*260)+'px');
+    p.style.setProperty('--dur',(2+Math.random()*1.6).toFixed(2)+'s');
+    p.style.setProperty('--delay',(Math.random()*.55).toFixed(2)+'s');
+    layer.appendChild(p);
+  }
+  setTimeout(()=>layer.replaceChildren(),4700);
+}
+function renderHistory(){
+  $('history-count').textContent=history.length+' '+(history.length===1?'predicción':'predicciones');
+  $('history-empty').hidden=history.length>0;
+  const list=$('history-list');list.replaceChildren();
+  history.forEach((item,i)=>{
+    const li=document.createElement('li');
+    const left=document.createElement('div');
+    const label=document.createElement('strong');label.className=item.prediction===1?'approved':'failed';label.textContent=item.prediction===1?'Aprueba · 1':'Reprueba · 0';
+    const time=document.createElement('time');time.textContent=' · '+item.time;
+    left.append(label,time);
+    const btn=document.createElement('button');btn.type='button';btn.textContent='Reutilizar';btn.setAttribute('aria-label','Reutilizar valores de la consulta');
+    btn.addEventListener('click',()=>{if(busy)return;setRecord(item.record);announce('Escenario recuperado');window.scrollTo({top:0,behavior:'smooth'});});
+    li.append(left,btn);list.appendChild(li);
+  });
+}
+form.addEventListener('submit',async event=>{
+  event.preventDefault();if(busy)return;
+  $('form-error').textContent='';let record;
+  try{record=readRecord();}catch(err){$('form-error').textContent=err.message;return;}
+  if(location.protocol==='file:'){$('offline-note').classList.add('show');showError('Para consultar el modelo, abre la página desde Azure App Service o tu servidor local FastAPI.',null);return;}
+  busy=true;startLoading();const started=performance.now();
+  try{
+    const response=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(makePayload(record))});
+    let result;
+    try{result=await response.json();}catch(_){throw Error('El servidor no devolvió un JSON válido. Revisa los registros de FastAPI.');}
+    if(!response.ok){const detail=typeof result.detail==='string'?result.detail:'Error del servidor (HTTP '+response.status+').';throw Error(detail);}
+    const predictions=result&&result.predictions;
+    if(!Array.isArray(predictions)||predictions.length!==1||![0,1].includes(Number(predictions[0]))){
+      $('response-preview').textContent=JSON.stringify(result,null,2);
+      throw Error('La respuesta no contiene exactamente una predicción de clase 0 o 1. Revisa el contrato del modelo.');
+    }
+    const elapsed=Math.round(performance.now()-started);
+    const prediction=Number(predictions[0]);showResult(prediction,elapsed,result);
+    history.unshift({prediction,record:[...record],time:new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})});
+    if(history.length>4)history.pop();renderHistory();setApi(true,'API operativa');
+  }catch(err){showError(err.message||'No se pudo completar la consulta.',Math.round(performance.now()-started));$('form-error').textContent=err.message||'Error al consultar el modelo.';}
+  finally{finishLoading();}
+});
+setRecord(samples[0]);resetResult();checkApi();
 </script>
-</body></html>
+</body>
+</html>
