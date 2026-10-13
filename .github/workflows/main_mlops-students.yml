@@ -73,4 +73,28 @@ jobs:
         with:
           app-name: 'mlops-students'
           slot-name: 'Production'
+
+      # Muestra enlaces en la pestaña Summary de cada ejecución exitosa.
+      # La URL se obtiene del despliegue, sin suponer un dominio fijo.
+      - name: Mostrar enlaces de la aplicación
+        env:
+          APP_URL: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+        run: |
+          if [ -z "$APP_URL" ]; then
+            echo "El despliegue terminó, pero no se recibió la URL. Consulta Default domain en Azure App Service." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          APP_URL="${APP_URL%/}"
+          {
+            echo "## MLOps Students | Aplicación desplegada"
+            echo ""
+            echo "- [Abrir la página web](${APP_URL}/)"
+            echo "- [Comprobar la API (/health)](${APP_URL}/health)"
+            echo "- [Consultar la documentación (/docs)](${APP_URL}/docs)"
+            echo ""
+            echo "Despliegue publicado. Para verificar Databricks, realiza una predicción desde la web."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          
           
